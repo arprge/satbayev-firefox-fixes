@@ -1,5 +1,5 @@
 // ==UserScript==
-// @name         Satbayev University SSO & Schedule Fixes
+// @name         Satbayev Fixes
 // @namespace    https://github.com/arprge/satbayev-firefox-fixes
 // @version      3.2.1
 // @description  Fixes Firefox password autofill on SSO and improves schedule readability
@@ -9,6 +9,7 @@
 // @grant        GM_addStyle
 // @run-at       document-start
 // @license      MIT
+// @updateURL    https://github.com/arprge/youtube-autoplay-stop/raw/main/scriptYT.js
 // @homepageURL  https://github.com/arprge/satbayev-firefox-fixes
 // @supportURL   https://github.com/arprge/satbayev-firefox-fixes/issues
 // ==/UserScript==
@@ -106,3 +107,4 @@
     }
 
 })();
+
