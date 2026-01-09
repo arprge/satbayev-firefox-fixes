@@ -10,8 +10,9 @@ Userscript for Firefox that fixes common issues on Satbayev University websites.
 ## Installation
 
 1. Install [Tampermonkey](https://addons.mozilla.org/firefox/addon/tampermonkey/) or [Violentmonkey](https://addons.mozilla.org/firefox/addon/violentmonkey/)
-2. Open [ssoFox.js](ssoFox.js) and install
+2. [Click here](ssoFox.user.js) and install
 
 ## License
 
 MIT
+
