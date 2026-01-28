@@ -5,7 +5,7 @@ Userscript for Firefox that fixes common issues on Satbayev University websites.
 ## Features
 
 - **SSO Password Manager Fix** - Enables Firefox to save and autofill login credentials
-- **Schedule Readability** - Improves font size and layout on the student schedule page
+- **Schedule Readability** - Fixes schedule display for Firefox users
 
 ## Installation
 
@@ -15,5 +15,6 @@ Userscript for Firefox that fixes common issues on Satbayev University websites.
 ## License
 
 MIT
+
 
 
