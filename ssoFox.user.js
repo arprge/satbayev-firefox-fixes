@@ -3,7 +3,7 @@
 // @namespace    https://github.com/arprge/satbayev-firefox-fixes
 // @version      3.2.1
 // @description  Fixes Firefox password autofill on SSO and improves schedule readability
-// @description:ru Фиксы багов сайта университета на фаерфоксе
+// @description:ru Фиксы багов отображения сайта университета на фаерфоксе
 // @author       Alan
 // @match        *://*.satbayev.university/*
 // @grant        GM_addStyle
@@ -62,8 +62,8 @@
     // =================================================================
     // SCHEDULE READABILITY IMPROVEMENTS
     // =================================================================
-    // Enhances the student schedule page by increasing font sizes
-    // and improving layout for better readability
+
+    
     if (currentHost.includes("stud")) {
         const scheduleCSS = `
             /* Increase font size for all lesson text elements */
@@ -107,4 +107,5 @@
     }
 
 })();
+
 
