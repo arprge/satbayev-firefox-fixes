@@ -9,7 +9,7 @@
 // @grant        GM_addStyle
 // @run-at       document-start
 // @license      MIT
-// @updateURL    https://github.com/arprge/youtube-autoplay-stop/raw/main/scriptYT.js
+// @updateURL    https://raw.githubusercontent.com/arprge/satbayev-firefox-fixes/refs/heads/main/ssoFox.user.js
 // @homepageURL  https://github.com/arprge/satbayev-firefox-fixes
 // @supportURL   https://github.com/arprge/satbayev-firefox-fixes/issues
 // ==/UserScript==
@@ -107,5 +107,6 @@
     }
 
 })();
+
 
 
