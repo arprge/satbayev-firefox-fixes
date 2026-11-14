@@ -1,76 +1,83 @@
 // ==UserScript==
 // @name         Satbayev Fixes
 // @namespace    https://github.com/arprge/satbayev-firefox-fixes
-// @version      3.2.1
+// @version      3.3.0
 // @description  Fixes Firefox password autofill on SSO and improves schedule readability
 // @description:ru Фиксы багов отображения сайта университета на фаерфоксе
 // @author       Alan
 // @match        *://*.satbayev.university/*
+// @icon         https://www.google.com/s2/favicons?sz=64&domain=satbayev.university
 // @grant        GM_addStyle
 // @run-at       document-start
 // @license      MIT
 // @updateURL    https://raw.githubusercontent.com/arprge/satbayev-firefox-fixes/refs/heads/main/ssoFox.user.js
+// @downloadURL  https://raw.githubusercontent.com/arprge/satbayev-firefox-fixes/refs/heads/main/ssoFox.user.js
 // @homepageURL  https://github.com/arprge/satbayev-firefox-fixes
 // @supportURL   https://github.com/arprge/satbayev-firefox-fixes/issues
 // ==/UserScript==
 
-(function () {
+(() => {
     'use strict';
 
-    const currentHost = window.location.hostname;
+    const host = window.location.hostname;
 
     // =================================================================
-    // SSO PASSWORD MANAGER FIX
+    // 1. SSO PASSWORD MANAGER FIX
     // =================================================================
-    if (currentHost.includes("sso")) {
-        
-        /**
-         * Applies `autocomplete` attributes to the SSO login form.
-         * @returns {boolean} True when both inputs exist on the page
-         */
+    if (host.startsWith('sso.') || host.includes('.sso.')) {
         function fixFormAttributes() {
             const loginInput = document.querySelector('input[name="login"]');
             const passwordInput = document.querySelector('input[name="password"]');
 
-            if (loginInput && loginInput.getAttribute('autocomplete') !== 'username') {
-                loginInput.setAttribute('autocomplete', 'username');
+            if (loginInput) {
+                if (loginInput.autocomplete !== 'username') {
+                    loginInput.autocomplete = 'username';
+                }
+                if (loginInput.form?.getAttribute('autocomplete') === 'off') {
+                    loginInput.form.removeAttribute('autocomplete');
+                }
             }
 
-            if (passwordInput && passwordInput.getAttribute('autocomplete') !== 'current-password') {
-                passwordInput.setAttribute('autocomplete', 'current-password');
+            if (passwordInput && passwordInput.autocomplete !== 'current-password') {
+                passwordInput.autocomplete = 'current-password';
             }
 
-            return !!(loginInput && passwordInput);
+            return Boolean(loginInput && passwordInput);
         }
 
         const observer = new MutationObserver(() => {
-            if (fixFormAttributes()) {
-                observer.disconnect();
-            }
+            fixFormAttributes();
         });
 
         observer.observe(document.documentElement, {
             childList: true,
-            subtree: true
+            subtree: true,
+            attributes: true,
+            attributeFilter: ['autocomplete'],
         });
 
-        if (fixFormAttributes()) {
-            observer.disconnect();
-        }
+        fixFormAttributes();
+
+        // Keep watching briefly after load in case a JS framework re-hydrates the form,
+        // then disconnect so the page stays lightweight.
+        window.addEventListener(
+            'load',
+            () => {
+                fixFormAttributes();
+                setTimeout(() => observer.disconnect(), 2000);
+            },
+            { once: true }
+        );
     }
 
     // =================================================================
-    // SCHEDULE READABILITY IMPROVEMENTS
+    // 2. SCHEDULE READABILITY IMPROVEMENTS
     // =================================================================
-
-    
-    if (currentHost.includes("stud")) {
+    if (host.startsWith('stud.') || host.includes('.stud.')) {
         const scheduleCSS = `
             /* Increase font size for all lesson text elements */
             rs-schedule .block-schedule .schedule-grid .schedule-table tbody tr td .lesson,
-            rs-schedule .block-schedule .schedule-grid .schedule-table tbody tr td .lesson p,
-            rs-schedule .block-schedule .schedule-grid .schedule-table tbody tr td .lesson span,
-            rs-schedule .block-schedule .schedule-grid .schedule-table tbody tr td .lesson div {
+            rs-schedule .block-schedule .schedule-grid .schedule-table tbody tr td .lesson :is(p, span, div) {
                 font-size: 16px !important;
                 line-height: 1.2 !important;
             }
@@ -96,17 +103,12 @@
             }
         `;
 
-        // Apply styles using GM_addStyle if available, otherwise use standard method
-        if (typeof GM_addStyle !== "undefined") {
+        if (typeof GM_addStyle === 'function') {
             GM_addStyle(scheduleCSS);
         } else {
-            const styleElement = document.createElement('style');
-            styleElement.textContent = scheduleCSS;
-            document.head.appendChild(styleElement);
+            const style = document.createElement('style');
+            style.textContent = scheduleCSS;
+            (document.head || document.documentElement).appendChild(style);
         }
     }
-
 })();
-
-
-
