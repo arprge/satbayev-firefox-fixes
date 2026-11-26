@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Satbayev Fixes
 // @namespace    https://github.com/arprge/satbayev-firefox-fixes
-// @version      3.3.0
+// @version      3.3.1
 // @description  Fixes Firefox password autofill on SSO and improves schedule readability
 // @description:ru Фиксы багов отображения сайта университета на фаерфоксе
 // @author       Alan
@@ -19,61 +19,94 @@
 (() => {
     'use strict';
 
-    const host = window.location.hostname;
+    // Bail out on non-HTML responses (e.g. raw JSON endpoints)
+    if (document.contentType && !document.contentType.includes('html')) {
+        return;
+    }
+
+    const { hostname } = window.location;
+    const isSubdomain = (prefix) =>
+        hostname.startsWith(`${prefix}.`) || hostname.includes(`.${prefix}.`);
 
     // =================================================================
     // 1. SSO PASSWORD MANAGER FIX
     // =================================================================
-    if (host.startsWith('sso.') || host.includes('.sso.')) {
-        function fixFormAttributes() {
+    const initSsoAutofillFix = () => {
+        const MAX_REWRITES = 20;
+        let rewrites = 0;
+
+        const fixFormAttributes = () => {
             const loginInput = document.querySelector('input[name="login"]');
             const passwordInput = document.querySelector('input[name="password"]');
 
-            if (loginInput) {
-                if (loginInput.autocomplete !== 'username') {
-                    loginInput.autocomplete = 'username';
-                }
-                if (loginInput.form?.getAttribute('autocomplete') === 'off') {
-                    loginInput.form.removeAttribute('autocomplete');
-                }
+            let mutated = false;
+
+            if (loginInput && loginInput.autocomplete !== 'username') {
+                loginInput.autocomplete = 'username';
+                mutated = true;
             }
 
             if (passwordInput && passwordInput.autocomplete !== 'current-password') {
                 passwordInput.autocomplete = 'current-password';
+                mutated = true;
             }
 
-            return Boolean(loginInput && passwordInput);
-        }
+            const forms = new Set([loginInput?.form, passwordInput?.form].filter(Boolean));
+            for (const form of forms) {
+                if (form.getAttribute('autocomplete') === 'off') {
+                    form.removeAttribute('autocomplete');
+                    mutated = true;
+                }
+            }
+
+            if (mutated) {
+                rewrites += 1;
+            }
+        };
 
         const observer = new MutationObserver(() => {
             fixFormAttributes();
+            if (rewrites >= MAX_REWRITES) {
+                observer.disconnect();
+            }
         });
 
-        observer.observe(document.documentElement, {
-            childList: true,
-            subtree: true,
-            attributes: true,
-            attributeFilter: ['autocomplete'],
-        });
+        const startObserving = () => {
+            const root = document.documentElement;
+            if (!root) return false;
 
-        fixFormAttributes();
+            observer.observe(root, {
+                childList: true,
+                subtree: true,
+                attributes: true,
+                attributeFilter: ['autocomplete'],
+            });
+            fixFormAttributes();
+            return true;
+        };
+
+        if (!startObserving()) {
+            document.addEventListener('DOMContentLoaded', startObserving, { once: true });
+        }
 
         // Keep watching briefly after load in case a JS framework re-hydrates the form,
         // then disconnect so the page stays lightweight.
-        window.addEventListener(
-            'load',
-            () => {
-                fixFormAttributes();
-                setTimeout(() => observer.disconnect(), 2000);
-            },
-            { once: true }
-        );
-    }
+        const scheduleDisconnect = () => {
+            fixFormAttributes();
+            setTimeout(() => observer.disconnect(), 2000);
+        };
+
+        if (document.readyState === 'complete') {
+            scheduleDisconnect();
+        } else {
+            window.addEventListener('load', scheduleDisconnect, { once: true });
+        }
+    };
 
     // =================================================================
     // 2. SCHEDULE READABILITY IMPROVEMENTS
     // =================================================================
-    if (host.startsWith('stud.') || host.includes('.stud.')) {
+    const initScheduleStyles = () => {
         const scheduleCSS = `
             /* Increase font size for all lesson text elements */
             rs-schedule .block-schedule .schedule-grid .schedule-table tbody tr td .lesson,
@@ -103,12 +136,31 @@
             }
         `;
 
-        if (typeof GM_addStyle === 'function') {
-            GM_addStyle(scheduleCSS);
-        } else {
+        const injectStyle = (css) => {
+            if (typeof GM_addStyle === 'function') {
+                GM_addStyle(css);
+                return;
+            }
+
+            const target = document.head || document.documentElement;
+            if (!target) {
+                document.addEventListener('DOMContentLoaded', () => injectStyle(css), { once: true });
+                return;
+            }
+
             const style = document.createElement('style');
-            style.textContent = scheduleCSS;
-            (document.head || document.documentElement).appendChild(style);
-        }
+            style.textContent = css;
+            target.appendChild(style);
+        };
+
+        injectStyle(scheduleCSS);
+    };
+
+    if (isSubdomain('sso')) {
+        initSsoAutofillFix();
+    }
+
+    if (isSubdomain('stud')) {
+        initScheduleStyles();
     }
 })();
