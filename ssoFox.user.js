@@ -108,37 +108,44 @@
     // =================================================================
     const initScheduleStyles = () => {
         const scheduleCSS = `
-            /* Increase font size for all lesson text elements */
-            rs-schedule .block-schedule .schedule-grid .schedule-table tbody tr td .lesson,
-            rs-schedule .block-schedule .schedule-grid .schedule-table tbody tr td .lesson :is(p, span, div) {
+            /* Improve lesson cell layout and readability */
+            rs-schedule .block-schedule .schedule-grid .schedule-table tbody tr td .lesson {
                 font-size: 16px !important;
                 line-height: 1.2 !important;
-            }
-
-            /* Improve lesson cell layout */
-            rs-schedule .block-schedule .schedule-grid .schedule-table tbody tr td .lesson {
                 padding: 4px !important;
                 height: auto !important;
                 min-height: 100%;
                 display: flex;
                 flex-direction: column;
                 justify-content: center;
-            }
 
-            /* Adjust paragraph spacing */
-            rs-schedule .block-schedule .schedule-grid .schedule-table tbody tr td .lesson p {
-                margin-bottom: 2px !important;
-            }
+                & :is(p, span, div) {
+                    font-size: 16px !important;
+                    line-height: 1.2 !important;
+                }
 
-            /* Make lesson blocks more prominent */
-            rs-schedule .block-schedule .schedule-grid .schedule-table tbody tr td .lesson ._block {
-                font-weight: 630 !important;
+                /* Adjust paragraph spacing */
+                & p {
+                    margin-bottom: 2px !important;
+                }
+
+                /* Make lesson blocks more prominent */
+                & ._block {
+                    font-weight: 630 !important;
+                }
             }
         `;
 
         const injectStyle = (css) => {
             if (typeof GM_addStyle === 'function') {
                 GM_addStyle(css);
+                return;
+            }
+
+            if ('adoptedStyleSheets' in document) {
+                const sheet = new CSSStyleSheet();
+                sheet.replaceSync(css);
+                document.adoptedStyleSheets.push(sheet);
                 return;
             }
 
